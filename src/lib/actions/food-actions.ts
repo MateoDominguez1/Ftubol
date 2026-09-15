@@ -17,20 +17,33 @@ export interface FoodOption {
   source: string;
 }
 
+/** Saca espacios, apóstrofes y acentos para que "mc donalds" encuentre "McDonald's". */
+function normalize(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}
+
 /**
- * Busca en la biblioteca local primero; si hay pocos resultados, complementa con
- * FatSecret (si está configurado) e importa esos alimentos a la biblioteca local
- * para no tener que volver a pedirlos la próxima vez.
+ * Busca en la biblioteca local primero (por nombre y marca, tolerante a espacios/
+ * apóstrofes/acentos); si hay pocos resultados, complementa con FatSecret (si está
+ * configurado) e importa esos alimentos a la biblioteca local para no tener que
+ * volver a pedirlos la próxima vez.
  */
 export async function searchFoodsAction(query: string): Promise<FoodOption[]> {
   const trimmed = query.trim();
   if (trimmed.length < 2) return [];
 
-  const local = await prisma.food.findMany({
-    where: { name: { contains: trimmed, mode: "insensitive" } },
-    take: 15,
-    orderBy: { name: "asc" },
-  });
+  const words = trimmed.split(/\s+/).map(normalize).filter(Boolean);
+  const allFoods = await prisma.food.findMany({ orderBy: { name: "asc" } });
+  const local = allFoods
+    .filter((f) => {
+      const haystack = normalize(`${f.name} ${f.brand ?? ""}`);
+      return words.every((w) => haystack.includes(w));
+    })
+    .slice(0, 15);
 
   if (local.length >= 8) return local;
 
@@ -56,11 +69,15 @@ export async function searchFoodsAction(query: string): Promise<FoodOption[]> {
     });
   }
 
-  return prisma.food.findMany({
-    where: { name: { contains: trimmed, mode: "insensitive" } },
-    take: 15,
-    orderBy: { name: "asc" },
-  });
+  if (newOnes.length === 0) return local;
+
+  const refreshed = await prisma.food.findMany({ orderBy: { name: "asc" } });
+  return refreshed
+    .filter((f) => {
+      const haystack = normalize(`${f.name} ${f.brand ?? ""}`);
+      return words.every((w) => haystack.includes(w));
+    })
+    .slice(0, 15);
 }
 
 export async function createCustomFoodAction(formData: FormData) {

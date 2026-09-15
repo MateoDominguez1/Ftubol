@@ -45,6 +45,7 @@ const EXERCISES: SeedExercise[] = [
 
 type SeedFood = {
   name: string;
+  brand?: string;
   caloriesPer100g: number;
   proteinPer100g: number;
   carbsPer100g: number;
@@ -82,6 +83,17 @@ const FOODS: SeedFood[] = [
   { name: "Tomate", caloriesPer100g: 18, proteinPer100g: 0.9, carbsPer100g: 3.9, fatPer100g: 0.2 },
   { name: "Espinaca cruda", caloriesPer100g: 23, proteinPer100g: 2.9, carbsPer100g: 3.6, fatPer100g: 0.4 },
   { name: "Miel", caloriesPer100g: 304, proteinPer100g: 0.3, carbsPer100g: 82, fatPer100g: 0 },
+
+  // Comida rápida — valores nutricionales publicados por la cadena, normalizados a 100g.
+  { name: "Big Mac", brand: "McDonald's", caloriesPer100g: 257, proteinPer100g: 11.4, carbsPer100g: 20.5, fatPer100g: 15.1 },
+  { name: "Cuarto de Libra con Queso", brand: "McDonald's", caloriesPer100g: 261, proteinPer100g: 15.1, carbsPer100g: 20.6, fatPer100g: 13.1 },
+  { name: "McPollo", brand: "McDonald's", caloriesPer100g: 252, proteinPer100g: 9.8, carbsPer100g: 28, fatPer100g: 11.2 },
+  { name: "McNuggets", brand: "McDonald's", caloriesPer100g: 266, proteinPer100g: 15.6, carbsPer100g: 15.6, fatPer100g: 15.6 },
+  { name: "Papas fritas medianas", brand: "McDonald's", caloriesPer100g: 291, proteinPer100g: 3.4, carbsPer100g: 37.6, fatPer100g: 13.7 },
+  { name: "McMuffin de huevo", brand: "McDonald's", caloriesPer100g: 226, proteinPer100g: 12.4, carbsPer100g: 21.9, fatPer100g: 9.5 },
+  { name: "Sundae de caramelo", brand: "McDonald's", caloriesPer100g: 205, proteinPer100g: 4.2, carbsPer100g: 36, fatPer100g: 4.8 },
+  { name: "McFlurry Oreo", brand: "McDonald's", caloriesPer100g: 155, proteinPer100g: 3.6, carbsPer100g: 21, fatPer100g: 6 },
+  { name: "Coca-Cola", caloriesPer100g: 42, proteinPer100g: 0, carbsPer100g: 10.6, fatPer100g: 0 },
 ];
 
 async function main() {
@@ -156,6 +168,7 @@ async function main() {
     await prisma.food.create({
       data: {
         name: food.name,
+        brand: food.brand ?? null,
         caloriesPer100g: food.caloriesPer100g,
         proteinPer100g: food.proteinPer100g,
         carbsPer100g: food.carbsPer100g,
