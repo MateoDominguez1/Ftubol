@@ -51,7 +51,11 @@ export async function searchTuduuFoods(query: string, limit = 10): Promise<Tuduu
       },
       body: JSON.stringify({ searchText: query }),
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      console.error(`[tuduu] search failed: HTTP ${res.status} — ${body.slice(0, 300)}`);
+      return [];
+    }
 
     const data = (await res.json()) as { data?: TuduuApiItem[] };
     const items = data.data ?? [];
@@ -68,7 +72,8 @@ export async function searchTuduuFoods(query: string, limit = 10): Promise<Tuduu
         carbsPer100g: Math.round((it.macronutrients!.carbohydrates ?? 0) * 10) / 10,
         fatPer100g: Math.round((it.macronutrients!.fat ?? 0) * 10) / 10,
       }));
-  } catch {
+  } catch (err) {
+    console.error("[tuduu] search threw:", err);
     return [];
   }
 }
