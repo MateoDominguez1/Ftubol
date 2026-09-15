@@ -157,6 +157,7 @@ model Exercise {
   muscleGroups     ExerciseMuscleGroup[]
   workoutExercises WorkoutExercise[]
   personalRecords  PersonalRecord[]
+  routineExercises RoutineExercise[]
 }
 
 model ExerciseMuscleGroup {
@@ -167,6 +168,33 @@ model ExerciseMuscleGroup {
   factor      Float       @default(1)
 
   @@unique([exerciseId, muscleGroup])
+}
+
+// ---------------------------------------------------------------------------
+// Rutinas — plantillas de qué hacer, separadas del registro de lo que se hizo
+// ---------------------------------------------------------------------------
+
+model Routine {
+  id        String   @id @default(cuid())
+  name      String
+  notes     String?
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  exercises RoutineExercise[]
+}
+
+model RoutineExercise {
+  id         String   @id @default(cuid())
+  routineId  String
+  routine    Routine  @relation(fields: [routineId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  order      Int      @default(0)
+  targetSets Int?
+  targetReps String?
+  targetRIR  Int?
+  notes      String?
 }
 
 // ---------------------------------------------------------------------------
@@ -420,6 +448,37 @@ model NutritionEntry {
   fatG      Int?
   notes     String?
   createdAt DateTime @default(now())
+}
+
+// Base de alimentos: propia + opcionalmente importada de FatSecret. Los macros
+// del día se calculan automáticamente a partir de FoodLogEntry (sección 18).
+model Food {
+  id              String   @id @default(cuid())
+  name            String
+  brand           String?
+  caloriesPer100g Float
+  proteinPer100g  Float
+  carbsPer100g    Float
+  fatPer100g      Float
+  source          String   @default("local")
+  externalId      String?
+  isCustom        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+
+  logEntries FoodLogEntry[]
+
+  @@unique([source, externalId])
+}
+
+model FoodLogEntry {
+  id            String   @id @default(cuid())
+  date          DateTime
+  foodId        String
+  food          Food     @relation(fields: [foodId], references: [id])
+  quantityGrams Float
+  createdAt     DateTime @default(now())
+
+  @@index([date])
 }
 
 model HydrationEntry {

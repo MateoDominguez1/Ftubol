@@ -2,6 +2,7 @@ import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { addDays, formatDateShortEs, todayStart } from "@/lib/dates";
 import { computeNutritionTargets, DAY_TYPE_LABEL, type DayType } from "@/lib/calculations/nutrition";
+import { getDailyNutritionTotals } from "@/lib/data/nutrition-totals";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { InsufficientData } from "@/components/dashboard/insufficient-data";
 import { Button } from "@/components/ui/button";
@@ -20,13 +21,14 @@ function targetVsActual(label: string, actual: number | null, min: number | null
 
 export default async function NutritionPage() {
   const today = todayStart();
-  const [profile, todayEntry, todayEvents, latestMeasurement, history] = await Promise.all([
+  const [profile, todayEvents, latestMeasurement, history] = await Promise.all([
     prisma.profile.findFirst(),
-    prisma.nutritionEntry.findUnique({ where: { date: today } }),
     prisma.calendarEvent.findMany({ where: { date: today } }),
     prisma.bodyMeasurement.findFirst({ where: { weightKg: { not: null } }, orderBy: { date: "desc" } }),
-    prisma.nutritionEntry.findMany({ where: { date: { gte: addDays(today, -13) } }, orderBy: { date: "desc" } }),
+    getDailyNutritionTotals(addDays(today, -13), today),
   ]);
+  const todayEntry = history.find((h) => h.date.toDateString() === today.toDateString()) ?? null;
+  const historyDesc = [...history].reverse();
 
   const bodyWeight = latestMeasurement?.weightKg ?? profile?.initialWeightKg ?? 85;
   const eventTypes = new Set(todayEvents.map((e) => e.type));
@@ -79,14 +81,14 @@ export default async function NutritionPage() {
           <CardTitle>Historial (14 días)</CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-1">
-          {history.length === 0 ? (
+          {historyDesc.length === 0 ? (
             <InsufficientData reason="Todavía no registraste comidas." />
           ) : (
-            history.map((h) => (
-              <div key={h.id} className="flex items-center justify-between border-b border-border py-2 text-sm last:border-0">
+            historyDesc.map((h) => (
+              <div key={h.date.toISOString()} className="flex items-center justify-between border-b border-border py-2 text-sm last:border-0">
                 <span className="text-muted">{formatDateShortEs(h.date)}</span>
-                <span>{h.calories != null ? `${h.calories} kcal` : "Sin datos"}</span>
-                <span className="text-muted-2">{h.proteinG != null ? `${h.proteinG}g prot.` : ""}</span>
+                <span>{h.calories} kcal</span>
+                <span className="text-muted-2">{h.proteinG}g prot. {h.source === "manual" ? "· manual" : ""}</span>
               </div>
             ))
           )}

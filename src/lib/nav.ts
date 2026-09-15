@@ -50,6 +50,7 @@ export const NAV_GROUPS: NavGroup[] = [
     title: "Gimnasio",
     items: [
       { href: "/gym", label: "Sesiones", icon: Dumbbell },
+      { href: "/gym/routines", label: "Rutinas", icon: ClipboardList },
       { href: "/gym/exercises", label: "Ejercicios", icon: ListChecks },
       { href: "/strength", label: "Fuerza", icon: TrendingUp },
       { href: "/volume", label: "Volumen", icon: BarChart3 },
@@ -77,6 +78,7 @@ export const NAV_GROUPS: NavGroup[] = [
     items: [
       { href: "/sleep", label: "Sueño", icon: Moon },
       { href: "/nutrition", label: "Nutrición", icon: Utensils },
+      { href: "/nutrition/foods", label: "Alimentos", icon: ListChecks },
       { href: "/hydration", label: "Hidratación", icon: Droplets },
       { href: "/cutting", label: "Cutting progress", icon: Flame },
     ],

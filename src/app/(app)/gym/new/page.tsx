@@ -4,11 +4,22 @@ import { computeFatigueZone } from "@/lib/calculations/fatigue";
 import { ZoneBadge } from "@/components/dashboard/zone-badge";
 import { GymSessionBuilder } from "./gym-session-builder";
 
-export default async function NewGymSessionPage() {
+export default async function NewGymSessionPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ routine?: string }>;
+}) {
+  const { routine: routineId } = await searchParams;
   const today = todayStart();
-  const [exercises, checkin] = await Promise.all([
+  const [exercises, checkin, routine] = await Promise.all([
     prisma.exercise.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
     prisma.dailyCheckin.findUnique({ where: { date: today } }),
+    routineId
+      ? prisma.routine.findUnique({
+          where: { id: routineId },
+          include: { exercises: { orderBy: { order: "asc" } } },
+        })
+      : null,
   ]);
 
   const zone = checkin ? computeFatigueZone(checkin.sleepScore, checkin.legsScore, checkin.motivationScore) : null;
@@ -29,7 +40,17 @@ export default async function NewGymSessionPage() {
         </div>
       ) : null}
 
-      <GymSessionBuilder exercises={exercises} date={toDateInputValue(today)} />
+      <GymSessionBuilder
+        exercises={exercises}
+        date={toDateInputValue(today)}
+        initialLabel={routine?.name}
+        initialExercises={routine?.exercises.map((re) => ({
+          exerciseId: re.exerciseId,
+          targetSets: re.targetSets,
+          targetReps: re.targetReps,
+          targetRIR: re.targetRIR,
+        }))}
+      />
     </div>
   );
 }

@@ -52,13 +52,42 @@ function newBlock(exerciseId: string): ExerciseBlock {
   return { key: crypto.randomUUID(), exerciseId, notes: "", painFlag: false, sets: [emptySet()] };
 }
 
-export function GymSessionBuilder({ exercises, date }: { exercises: ExerciseOption[]; date: string }) {
+export interface InitialRoutineExercise {
+  exerciseId: string;
+  targetSets: number | null;
+  targetReps: string | null;
+  targetRIR: number | null;
+}
+
+function blockFromRoutineExercise(re: InitialRoutineExercise): ExerciseBlock {
+  const setCount = re.targetSets && re.targetSets > 0 ? re.targetSets : 1;
+  const objetivoParts = [re.targetReps ? `${re.targetReps} reps` : null, re.targetRIR != null ? `RIR ${re.targetRIR}` : null].filter(Boolean);
+  return {
+    key: crypto.randomUUID(),
+    exerciseId: re.exerciseId,
+    notes: objetivoParts.length > 0 ? `Objetivo: ${objetivoParts.join(", ")}` : "",
+    painFlag: false,
+    sets: Array.from({ length: setCount }, () => emptySet()),
+  };
+}
+
+export function GymSessionBuilder({
+  exercises,
+  date,
+  initialLabel,
+  initialExercises,
+}: {
+  exercises: ExerciseOption[];
+  date: string;
+  initialLabel?: string;
+  initialExercises?: InitialRoutineExercise[];
+}) {
   const [type, setType] = useState("STRENGTH");
-  const [label, setLabel] = useState("");
+  const [label, setLabel] = useState(initialLabel ?? "");
   const [durationMin, setDurationMin] = useState("");
   const [sessionRPE, setSessionRPE] = useState("");
   const [notes, setNotes] = useState("");
-  const [blocks, setBlocks] = useState<ExerciseBlock[]>([]);
+  const [blocks, setBlocks] = useState<ExerciseBlock[]>(() => (initialExercises ?? []).map(blockFromRoutineExercise));
   const [pickerValue, setPickerValue] = useState("");
 
   const exerciseName = useMemo(() => {
