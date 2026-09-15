@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --background: #05070a;
+  --surface: #10141b;
+  --surface-2: #171c25;
+  --border: rgba(255, 255, 255, 0.08);
+  --foreground: #f2f5f7;
+  --muted: #8b96a5;
+  --muted-2: #5c6673;
+
+  --brand: #3fdc7a;
+  --brand-foreground: #04140b;
+  --accent: #38bdf8;
+
+  --zone-green: #22c55e;
+  --zone-yellow: #eab308;
+  --zone-orange: #f97316;
+  --zone-red: #ef4444;
+
+  --danger: #ef4444;
+  --warning: #eab308;
+  --success: #22c55e;
+
+  --radius: 1rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-2: var(--muted-2);
+
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-accent: var(--accent);
+
+  --color-zone-green: var(--zone-green);
+  --color-zone-yellow: var(--zone-yellow);
+  --color-zone-orange: var(--zone-orange);
+  --color-zone-red: var(--zone-red);
+
+  --color-danger: var(--danger);
+  --color-warning: var(--warning);
+  --color-success: var(--success);
+
+  --radius-card: var(--radius);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--surface-2);
+  border-radius: 999px;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

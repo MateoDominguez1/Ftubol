@@ -1,0 +1,490 @@
+// Football Performance Dashboard — data model
+// Una sola base de datos compartida por todos los módulos (sección 32 del spec).
+// App de un solo usuario: no hay tabla User, Profile es un singleton.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum EventType {
+  GYM
+  FOOTBALL
+  MATCH
+  REST
+  WALK
+  OTHER
+}
+
+enum WorkoutType {
+  STRENGTH
+  POWER
+  UPPER_BODY
+  FULL_BODY
+  REDUCED
+  DELOAD
+  OTHER
+}
+
+enum MuscleGroup {
+  QUADS
+  HAMSTRINGS
+  GLUTES
+  ADDUCTORS
+  CALVES
+  CORE
+  CHEST
+  BACK
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  POWER_PLYO
+}
+
+enum ExerciseCategory {
+  STRENGTH
+  POWER
+  CORE
+  INJURY_PREVENTION
+  ACCESSORY
+}
+
+enum BodyZone {
+  HAMSTRING
+  ADDUCTOR
+  PUBIS
+  ANKLE
+  KNEE
+  SOLEUS
+  ACHILLES
+  SHOULDER
+  BACK
+  OTHER
+}
+
+enum PhotoAngle {
+  FRONT
+  SIDE
+  BACK
+}
+
+enum CheckinZone {
+  GREEN
+  YELLOW
+  ORANGE
+  RED
+}
+
+enum ProgressionDecision {
+  INCREASE_WEIGHT
+  MAINTAIN
+  DECREASE_WEIGHT
+  INCREASE_REPS
+  MAINTAIN_REPS
+}
+
+enum PhaseName {
+  ADAPTATION
+  STRENGTH
+  STRENGTH_POWER
+  MAINTENANCE
+}
+
+enum PRType {
+  MAX_WEIGHT
+  EST_1RM
+  MAX_REPS_AT_WEIGHT
+  MAX_VOLUME
+}
+
+enum InsightCategory {
+  BODY_COMPOSITION
+  SLEEP
+  STRENGTH
+  LOAD
+  FOOTBALL
+  NUTRITION
+  GENERAL
+}
+
+// ---------------------------------------------------------------------------
+// Perfil / configuración del atleta
+// ---------------------------------------------------------------------------
+
+model Profile {
+  id                      String   @id @default(cuid())
+  name                    String   @default("Jugador")
+  age                     Int
+  heightCm                Float
+  initialWeightKg         Float
+  position                String   @default("Defensa central")
+  footballSessionsPerWeek Int      @default(3)
+  gymScheduleNote         String?
+  targetWeightMinKg       Float?
+  targetWeightMaxKg       Float?
+  targetWaistReductionCm  Float?
+  calorieTargetMin        Int?
+  calorieTargetMax        Int?
+  proteinTargetMinG       Int?
+  proteinTargetMaxG       Int?
+  fatTargetPerKg          Float?   @default(0.9)
+  programStartDate        DateTime @default(now())
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+}
+
+// ---------------------------------------------------------------------------
+// Ejercicios y grupos musculares
+// ---------------------------------------------------------------------------
+
+model Exercise {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  category    ExerciseCategory @default(STRENGTH)
+  injuryZones BodyZone[]
+  isCustom    Boolean          @default(false)
+  notes       String?
+  createdAt   DateTime         @default(now())
+
+  muscleGroups     ExerciseMuscleGroup[]
+  workoutExercises WorkoutExercise[]
+  personalRecords  PersonalRecord[]
+}
+
+model ExerciseMuscleGroup {
+  id          String      @id @default(cuid())
+  exerciseId  String
+  exercise    Exercise    @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  muscleGroup MuscleGroup
+  factor      Float       @default(1)
+
+  @@unique([exerciseId, muscleGroup])
+}
+
+// ---------------------------------------------------------------------------
+// Calendario — fuente de verdad de la semana
+// ---------------------------------------------------------------------------
+
+model CalendarEvent {
+  id           String    @id @default(cuid())
+  date         DateTime
+  time         String?
+  durationMin  Int?
+  type         EventType
+  intensityRPE Int?
+  notes        String?
+  createdAt    DateTime  @default(now())
+
+  workout         Workout?
+  footballSession FootballSession?
+  match           Match?
+
+  @@index([date])
+}
+
+// ---------------------------------------------------------------------------
+// Gimnasio
+// ---------------------------------------------------------------------------
+
+model Workout {
+  id              String         @id @default(cuid())
+  date            DateTime
+  type            WorkoutType    @default(STRENGTH)
+  label           String?
+  checkinId       String?
+  checkin         DailyCheckin?  @relation(fields: [checkinId], references: [id])
+  calendarEventId String?        @unique
+  calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  durationMin     Int?
+  sessionRPE      Int?
+  notes           String?
+  nextSessionPlan String?
+  createdAt       DateTime       @default(now())
+
+  exercises WorkoutExercise[]
+
+  @@index([date])
+}
+
+model WorkoutExercise {
+  id                  String               @id @default(cuid())
+  workoutId           String
+  workout             Workout              @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exerciseId          String
+  exercise            Exercise             @relation(fields: [exerciseId], references: [id])
+  order               Int                  @default(0)
+  notes               String?
+  painFlag            Boolean              @default(false)
+  progressionDecision ProgressionDecision?
+
+  sets SetEntry[]
+}
+
+model SetEntry {
+  id                String          @id @default(cuid())
+  workoutExerciseId String
+  workoutExercise   WorkoutExercise @relation(fields: [workoutExerciseId], references: [id], onDelete: Cascade)
+  setNumber         Int
+  weightKg          Float?
+  reps              Int?
+  rir               Int?
+  difficulty        Int?
+  restSeconds       Int?
+  tempo             String?
+  painFlag          Boolean         @default(false)
+  notes             String?
+}
+
+// ---------------------------------------------------------------------------
+// Fútbol
+// ---------------------------------------------------------------------------
+
+model FootballSession {
+  id              String         @id @default(cuid())
+  date            DateTime
+  calendarEventId String?        @unique
+  calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  durationMin     Int?
+  rpe             Int?
+  minutesPlayed   Int?
+  performance     Int?
+  fatigue         Int?
+  legFeel         Int?
+
+  duels            Int?
+  duelsWon         Int?
+  aerialDuels      Int?
+  aerialDuelsWon   Int?
+  accelerations    Int?
+  directionChanges Int?
+  sprintRecovery   Int?
+  concentration    Int?
+  positioning      Int?
+  buildupPlay      Int?
+  longPasses       Int?
+  longPassesOk     Int?
+  defensiveErrors  Int?
+
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+model Match {
+  id              String         @id @default(cuid())
+  date            DateTime
+  calendarEventId String?        @unique
+  calendarEvent   CalendarEvent? @relation(fields: [calendarEventId], references: [id])
+  opponent        String?
+  competition     String?
+  isHome          Boolean?
+  starter         Boolean?
+  minutesPlayed   Int?
+  rpe             Int?
+  performance     Int?
+  fatigue         Int?
+  legFeel         Int?
+
+  goals            Int?
+  assists          Int?
+  duelsWon         Int?
+  duelsLost        Int?
+  aerialDuelsWon   Int?
+  aerialDuelsLost  Int?
+  accelerations    Int?
+  directionChanges Int?
+  sprintRecovery   Int?
+  concentration    Int?
+  positioning      Int?
+  buildupPlay      Int?
+  longPasses       Int?
+  longPassesOk     Int?
+  clearances       Int?
+  interceptions    Int?
+  passes           Int?
+  passesCompleted  Int?
+  defensiveErrors  Int?
+  personalRating   Int?
+
+  notes     String?
+  createdAt DateTime @default(now())
+
+  @@index([date])
+}
+
+// ---------------------------------------------------------------------------
+// Semáforo de fatiga / dolor / lesiones
+// ---------------------------------------------------------------------------
+
+model DailyCheckin {
+  id              String      @id @default(cuid())
+  date            DateTime    @unique
+  sleepScore      Int
+  legsScore       Int
+  motivationScore Int
+  totalScore      Int
+  zone            CheckinZone
+  notes           String?
+  createdAt       DateTime    @default(now())
+
+  workouts    Workout[]
+  painEntries PainEntry[]
+}
+
+model PainEntry {
+  id        String        @id @default(cuid())
+  date      DateTime
+  checkinId String?
+  checkin   DailyCheckin? @relation(fields: [checkinId], references: [id])
+  zone      BodyZone
+  painLevel Int
+  notes     String?
+  createdAt DateTime      @default(now())
+
+  @@index([date])
+}
+
+model Injury {
+  id          String    @id @default(cuid())
+  zone        BodyZone
+  description String
+  startDate   DateTime
+  endDate     DateTime?
+  status      String    @default("activa")
+  notes       String?
+  createdAt   DateTime  @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Sueño / composición corporal / fotos
+// ---------------------------------------------------------------------------
+
+model SleepEntry {
+  id          String   @id @default(cuid())
+  date        DateTime @unique
+  bedTime     String?
+  wakeTime    String?
+  hoursSlept  Float?
+  quality     Int?
+  wakeups     Int?
+  wakeFeeling Int?
+  notes       String?
+  createdAt   DateTime @default(now())
+}
+
+model BodyMeasurement {
+  id         String   @id @default(cuid())
+  date       DateTime
+  weightKg   Float?
+  waistCm    Float?
+  bodyFatPct Float?
+  conditions String?
+  createdAt  DateTime @default(now())
+
+  @@index([date])
+}
+
+model ProgressPhoto {
+  id        String     @id @default(cuid())
+  date      DateTime
+  angle     PhotoAngle
+  url       String
+  lighting  String?
+  position  String?
+  distance  String?
+  timeOfDay String?
+  createdAt DateTime   @default(now())
+
+  @@index([date])
+}
+
+// ---------------------------------------------------------------------------
+// Nutrición / hidratación
+// ---------------------------------------------------------------------------
+
+model NutritionEntry {
+  id        String   @id @default(cuid())
+  date      DateTime @unique
+  calories  Int?
+  proteinG  Int?
+  carbsG    Int?
+  fatG      Int?
+  notes     String?
+  createdAt DateTime @default(now())
+}
+
+model HydrationEntry {
+  id           String   @id @default(cuid())
+  date         DateTime @unique
+  waterMl      Int?
+  preMatchMl   Int?
+  duringMl     Int?
+  postMl       Int?
+  electrolytes Boolean  @default(false)
+  notes        String?
+  createdAt    DateTime @default(now())
+}
+
+// ---------------------------------------------------------------------------
+// Revisión semanal, objetivos, fases, récords, insights
+// ---------------------------------------------------------------------------
+
+model WeeklyReview {
+  id          String   @id @default(cuid())
+  weekStart   DateTime @unique
+  weekEnd     DateTime
+  summaryJson Json
+  evaluation  String?
+  createdAt   DateTime @default(now())
+}
+
+model Goal {
+  id          String    @id @default(cuid())
+  type        String
+  description String
+  targetValue Float?
+  targetDate  DateTime?
+  achieved    Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+}
+
+model Phase {
+  id        String    @id @default(cuid())
+  name      PhaseName
+  startDate DateTime
+  endDate   DateTime?
+  isActive  Boolean   @default(true)
+  notes     String?
+  createdAt DateTime  @default(now())
+}
+
+model PersonalRecord {
+  id         String   @id @default(cuid())
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id])
+  type       PRType
+  value      Float
+  reps       Int?
+  weightKg   Float?
+  date       DateTime
+  createdAt  DateTime @default(now())
+
+  @@index([exerciseId, type])
+}
+
+model Insight {
+  id        String          @id @default(cuid())
+  date      DateTime        @default(now())
+  category  InsightCategory
+  text      String
+  createdAt DateTime        @default(now())
+}
