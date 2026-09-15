@@ -84,15 +84,31 @@ const FOODS: SeedFood[] = [
   { name: "Espinaca cruda", caloriesPer100g: 23, proteinPer100g: 2.9, carbsPer100g: 3.6, fatPer100g: 0.4 },
   { name: "Miel", caloriesPer100g: 304, proteinPer100g: 0.3, carbsPer100g: 82, fatPer100g: 0 },
 
-  // Comida rápida — valores nutricionales publicados por la cadena, normalizados a 100g.
-  { name: "Big Mac", brand: "McDonald's", caloriesPer100g: 257, proteinPer100g: 11.4, carbsPer100g: 20.5, fatPer100g: 15.1 },
-  { name: "Cuarto de Libra con Queso", brand: "McDonald's", caloriesPer100g: 261, proteinPer100g: 15.1, carbsPer100g: 20.6, fatPer100g: 13.1 },
-  { name: "McPollo", brand: "McDonald's", caloriesPer100g: 252, proteinPer100g: 9.8, carbsPer100g: 28, fatPer100g: 11.2 },
-  { name: "McNuggets", brand: "McDonald's", caloriesPer100g: 266, proteinPer100g: 15.6, carbsPer100g: 15.6, fatPer100g: 15.6 },
-  { name: "Papas fritas medianas", brand: "McDonald's", caloriesPer100g: 291, proteinPer100g: 3.4, carbsPer100g: 37.6, fatPer100g: 13.7 },
-  { name: "McMuffin de huevo", brand: "McDonald's", caloriesPer100g: 226, proteinPer100g: 12.4, carbsPer100g: 21.9, fatPer100g: 9.5 },
-  { name: "Sundae de caramelo", brand: "McDonald's", caloriesPer100g: 205, proteinPer100g: 4.2, carbsPer100g: 36, fatPer100g: 4.8 },
-  { name: "McFlurry Oreo", brand: "McDonald's", caloriesPer100g: 155, proteinPer100g: 3.6, carbsPer100g: 21, fatPer100g: 6 },
+  // McDonald's Italia — valores nutricionales orientativos por 100g, calculados a
+  // partir de porción y macros publicados. Nombres como figuran en el menú de Italia.
+  { name: "Big Mac", brand: "McDonald's", caloriesPer100g: 237, proteinPer100g: 12.1, carbsPer100g: 20, fatPer100g: 12.1 },
+  { name: "Crispy McBacon", brand: "McDonald's", caloriesPer100g: 245, proteinPer100g: 12.5, carbsPer100g: 21, fatPer100g: 12 },
+  { name: "Gran Crispy McBacon", brand: "McDonald's", caloriesPer100g: 245, proteinPer100g: 12.5, carbsPer100g: 21, fatPer100g: 12 },
+  { name: "McChicken", brand: "McDonald's", caloriesPer100g: 237, proteinPer100g: 10.4, carbsPer100g: 24.3, fatPer100g: 11 },
+  { name: "McCrunchy Chicken", brand: "McDonald's", caloriesPer100g: 269, proteinPer100g: 11.8, carbsPer100g: 27.6, fatPer100g: 12.5 },
+  { name: "Double Chicken BBQ", brand: "McDonald's", caloriesPer100g: 261, proteinPer100g: 12, carbsPer100g: 26, fatPer100g: 13 },
+  { name: "Filet-o-Fish", brand: "McDonald's", caloriesPer100g: 243, proteinPer100g: 10.7, carbsPer100g: 27.1, fatPer100g: 10 },
+  { name: "Cheeseburger", brand: "McDonald's", caloriesPer100g: 261, proteinPer100g: 13.9, carbsPer100g: 27, fatPer100g: 10.4 },
+  { name: "Double Cheeseburger", brand: "McDonald's", caloriesPer100g: 275, proteinPer100g: 15, carbsPer100g: 26, fatPer100g: 13 },
+  { name: "Hamburger", brand: "McDonald's", caloriesPer100g: 258, proteinPer100g: 12, carbsPer100g: 30, fatPer100g: 9 },
+  { name: "Chickenburger", brand: "McDonald's", caloriesPer100g: 231, proteinPer100g: 10, carbsPer100g: 26, fatPer100g: 10 },
+  { name: "McToast", brand: "McDonald's", caloriesPer100g: 329, proteinPer100g: 15.7, carbsPer100g: 31.4, fatPer100g: 15.7 },
+  { name: "Chicken McNuggets (10 pz)", brand: "McDonald's", caloriesPer100g: 259, proteinPer100g: 14.1, carbsPer100g: 15.3, fatPer100g: 15.3 },
+  { name: "Insalata Grilled Chicken", brand: "McDonald's", caloriesPer100g: 92, proteinPer100g: 10.4, carbsPer100g: 4.8, fatPer100g: 3.2 },
+  { name: "Patatine medie", brand: "McDonald's", caloriesPer100g: 298, proteinPer100g: 3.5, carbsPer100g: 37.7, fatPer100g: 14 },
+  { name: "Patatine piccole", brand: "McDonald's", caloriesPer100g: 298, proteinPer100g: 3.5, carbsPer100g: 37.7, fatPer100g: 14 },
+  { name: "Patatine grandi", brand: "McDonald's", caloriesPer100g: 285, proteinPer100g: 3.3, carbsPer100g: 36, fatPer100g: 13.5 },
+  { name: "McMuffin con uovo", brand: "McDonald's", caloriesPer100g: 226, proteinPer100g: 12.4, carbsPer100g: 21.9, fatPer100g: 9.5 },
+  { name: "Cornetto", brand: "McDonald's", caloriesPer100g: 387, proteinPer100g: 6.7, carbsPer100g: 45.3, fatPer100g: 20 },
+  { name: "Sundae al cioccolato", brand: "McDonald's", caloriesPer100g: 193, proteinPer100g: 4, carbsPer100g: 33.3, fatPer100g: 5.3 },
+  { name: "McFlurry Oreo", brand: "McDonald's", caloriesPer100g: 183, proteinPer100g: 4, carbsPer100g: 28.6, fatPer100g: 6.3 },
+  { name: "Cappuccino McCafé", brand: "McDonald's", caloriesPer100g: 41, proteinPer100g: 2, carbsPer100g: 4, fatPer100g: 2 },
+  { name: "Caffè Espresso", brand: "McDonald's", caloriesPer100g: 1, proteinPer100g: 0.1, carbsPer100g: 0.2, fatPer100g: 0 },
   { name: "Coca-Cola", caloriesPer100g: 42, proteinPer100g: 0, carbsPer100g: 10.6, fatPer100g: 0 },
 ];
 
@@ -164,21 +180,23 @@ async function main() {
   console.log("Seeding Food library...");
   for (const food of FOODS) {
     const existing = await prisma.food.findFirst({ where: { name: food.name, source: "local" } });
-    if (existing) continue;
-    await prisma.food.create({
-      data: {
-        name: food.name,
-        brand: food.brand ?? null,
-        caloriesPer100g: food.caloriesPer100g,
-        proteinPer100g: food.proteinPer100g,
-        carbsPer100g: food.carbsPer100g,
-        fatPer100g: food.fatPer100g,
-        source: "local",
-        isCustom: false,
-      },
-    });
+    const data = {
+      name: food.name,
+      brand: food.brand ?? null,
+      caloriesPer100g: food.caloriesPer100g,
+      proteinPer100g: food.proteinPer100g,
+      carbsPer100g: food.carbsPer100g,
+      fatPer100g: food.fatPer100g,
+      source: "local",
+      isCustom: false,
+    };
+    if (existing) {
+      if (!existing.isCustom) await prisma.food.update({ where: { id: existing.id }, data });
+    } else {
+      await prisma.food.create({ data });
+    }
   }
-  console.log(`  -> ${FOODS.length} foods ensured`);
+  console.log(`  -> ${FOODS.length} foods ensured (valores actualizados a la versión más reciente del seed)`);
 
   console.log("Seed complete.");
 }
