@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { isFatSecretConfigured } from "@/lib/fatsecret";
+import { isTuduuConfigured } from "@/lib/tuduu";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,21 +9,25 @@ import { Badge } from "@/components/ui/badge";
 import { InsufficientData } from "@/components/dashboard/insufficient-data";
 import { createCustomFoodAction } from "@/lib/actions/food-actions";
 
+const SOURCE_LABEL: Record<string, string> = { fatsecret: "FatSecret", tuduu: "Tuduu" };
+
 export default async function FoodLibraryPage() {
   const foods = await prisma.food.findMany({ orderBy: { name: "asc" } });
-  const configured = isFatSecretConfigured();
+  const tuduuOk = isTuduuConfigured();
+  const fatSecretOk = isFatSecretConfigured();
+  const externalSources = [tuduuOk && "Tuduu (catálogo italiano)", fatSecretOk && "FatSecret"].filter(Boolean);
 
   return (
     <div className="flex flex-col gap-4">
       <div>
         <h1 className="text-xl font-semibold">Alimentos</h1>
         <p className="text-sm text-muted">
-          Biblioteca local{configured ? " + búsqueda externa (FatSecret) cuando no está en la biblioteca" : ""}.
+          Biblioteca local{externalSources.length > 0 ? ` + búsqueda externa (${externalSources.join(", ")}) cuando no está en la biblioteca` : ""}.
         </p>
       </div>
 
-      {!configured ? (
-        <InsufficientData reason="La búsqueda externa de alimentos (FatSecret) no está configurada — se usa solo la biblioteca local." />
+      {externalSources.length === 0 ? (
+        <InsufficientData reason="La búsqueda externa de alimentos no está configurada — se usa solo la biblioteca local." />
       ) : null}
 
       <Card>
@@ -69,7 +74,7 @@ export default async function FoodLibraryPage() {
               <span className="flex items-center gap-2">
                 {f.name}
                 {f.isCustom ? <Badge variant="secondary">custom</Badge> : null}
-                {f.source === "fatsecret" ? <Badge variant="outline">FatSecret</Badge> : null}
+                {f.source !== "local" ? <Badge variant="outline">{SOURCE_LABEL[f.source] ?? f.source}</Badge> : null}
               </span>
               <span className="text-muted-2">
                 {Math.round(f.caloriesPer100g)} kcal · {f.proteinPer100g}g P · {f.carbsPer100g}g C · {f.fatPer100g}g G (/100g)

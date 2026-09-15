@@ -3,8 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { searchFatSecretFoods } from "@/lib/fatsecret";
+import { searchFatSecretFoods, type FatSecretFoodResult } from "@/lib/fatsecret";
+import { searchTuduuFoods, type TuduuFoodResult } from "@/lib/tuduu";
 import { parseDateInput, todayStart } from "@/lib/dates";
+
+type ExternalFoodResult = (FatSecretFoodResult | TuduuFoodResult) & { source: "fatsecret" | "tuduu" };
 
 export interface FoodOption {
   id: string;
@@ -26,11 +29,18 @@ function normalize(text: string): string {
     .replace(/[^a-z0-9]/g, "");
 }
 
+function filterByWords<T extends { name: string; brand: string | null }>(items: T[], words: string[]): T[] {
+  return items.filter((f) => {
+    const haystack = normalize(`${f.name} ${f.brand ?? ""}`);
+    return words.every((w) => haystack.includes(w));
+  });
+}
+
 /**
  * Busca en la biblioteca local primero (por nombre y marca, tolerante a espacios/
- * apóstrofes/acentos); si hay pocos resultados, complementa con FatSecret (si está
- * configurado) e importa esos alimentos a la biblioteca local para no tener que
- * volver a pedirlos la próxima vez.
+ * apóstrofes/acentos); si hay pocos resultados, complementa con Tuduu (catálogo
+ * italiano) y FatSecret (si están configurados) e importa lo nuevo a la biblioteca
+ * local para no tener que volver a pedirlo la próxima vez.
  */
 export async function searchFoodsAction(query: string): Promise<FoodOption[]> {
   const trimmed = query.trim();
@@ -38,23 +48,25 @@ export async function searchFoodsAction(query: string): Promise<FoodOption[]> {
 
   const words = trimmed.split(/\s+/).map(normalize).filter(Boolean);
   const allFoods = await prisma.food.findMany({ orderBy: { name: "asc" } });
-  const local = allFoods
-    .filter((f) => {
-      const haystack = normalize(`${f.name} ${f.brand ?? ""}`);
-      return words.every((w) => haystack.includes(w));
-    })
-    .slice(0, 15);
+  const local = filterByWords(allFoods, words).slice(0, 15);
 
   if (local.length >= 8) return local;
 
-  const externalResults = await searchFatSecretFoods(trimmed, 8);
+  const [tuduuResults, fatSecretResults] = await Promise.all([
+    searchTuduuFoods(trimmed, 8),
+    searchFatSecretFoods(trimmed, 8),
+  ]);
+  const externalResults: ExternalFoodResult[] = [
+    ...tuduuResults.map((r) => ({ ...r, source: "tuduu" as const })),
+    ...fatSecretResults.map((r) => ({ ...r, source: "fatsecret" as const })),
+  ];
   const newOnes = externalResults.filter(
-    (ext) => !local.some((l) => l.source === "fatsecret" && l.externalId === ext.externalId),
+    (ext) => !local.some((l) => l.source === ext.source && l.externalId === ext.externalId),
   );
 
   for (const ext of newOnes) {
     await prisma.food.upsert({
-      where: { source_externalId: { source: "fatsecret", externalId: ext.externalId } },
+      where: { source_externalId: { source: ext.source, externalId: ext.externalId } },
       create: {
         name: ext.name,
         brand: ext.brand,
@@ -62,7 +74,7 @@ export async function searchFoodsAction(query: string): Promise<FoodOption[]> {
         proteinPer100g: ext.proteinPer100g,
         carbsPer100g: ext.carbsPer100g,
         fatPer100g: ext.fatPer100g,
-        source: "fatsecret",
+        source: ext.source,
         externalId: ext.externalId,
       },
       update: {},
@@ -72,12 +84,7 @@ export async function searchFoodsAction(query: string): Promise<FoodOption[]> {
   if (newOnes.length === 0) return local;
 
   const refreshed = await prisma.food.findMany({ orderBy: { name: "asc" } });
-  return refreshed
-    .filter((f) => {
-      const haystack = normalize(`${f.name} ${f.brand ?? ""}`);
-      return words.every((w) => haystack.includes(w));
-    })
-    .slice(0, 15);
+  return filterByWords(refreshed, words).slice(0, 15);
 }
 
 export async function createCustomFoodAction(formData: FormData) {
