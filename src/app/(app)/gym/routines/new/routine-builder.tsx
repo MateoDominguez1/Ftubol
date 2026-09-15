@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ExercisePicker } from "@/components/ui/exercise-picker";
 import { Trash2 } from "lucide-react";
 
 export interface ExerciseOption {
@@ -32,7 +32,6 @@ export function RoutineBuilder({ exercises }: { exercises: ExerciseOption[] }) {
   const [name, setName] = useState("");
   const [notes, setNotes] = useState("");
   const [rows, setRows] = useState<RoutineExerciseRow[]>([]);
-  const [pickerValue, setPickerValue] = useState("");
 
   const exerciseName = useMemo(() => {
     const map = new Map(exercises.map((e) => [e.id, e.name]));
@@ -42,7 +41,6 @@ export function RoutineBuilder({ exercises }: { exercises: ExerciseOption[] }) {
   function addExercise(exerciseId: string) {
     if (!exerciseId) return;
     setRows((prev) => [...prev, newRow(exerciseId)]);
-    setPickerValue("");
   }
 
   function updateRow(key: string, patch: Partial<RoutineExerciseRow>) {
@@ -117,18 +115,7 @@ export function RoutineBuilder({ exercises }: { exercises: ExerciseOption[] }) {
 
       <Card>
         <CardContent className="flex items-center gap-2 pt-4">
-          <Select value={pickerValue} onValueChange={addExercise}>
-            <SelectTrigger>
-              <SelectValue placeholder="Agregar ejercicio..." />
-            </SelectTrigger>
-            <SelectContent>
-              {exercises.map((ex) => (
-                <SelectItem key={ex.id} value={ex.id}>
-                  {ex.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ExercisePicker exercises={exercises} onPick={(ex) => addExercise(ex.id)} className="w-full" />
         </CardContent>
       </Card>
 

@@ -1,19 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createExerciseAction } from "@/lib/actions/gym-actions";
-
-const CATEGORY_LABEL: Record<string, string> = {
-  STRENGTH: "Fuerza",
-  POWER: "Potencia",
-  CORE: "Core",
-  INJURY_PREVENTION: "Prevención",
-  ACCESSORY: "Accesorio",
-};
+import { ExerciseLibraryList, CATEGORY_LABEL } from "./exercise-library-list";
 
 const MUSCLE_GROUPS = [
   "QUADS", "HAMSTRINGS", "GLUTES", "ADDUCTORS", "CALVES", "CORE",
@@ -69,27 +61,7 @@ export default async function ExerciseLibraryPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Biblioteca ({exercises.length})</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-1">
-          {exercises.map((ex) => (
-            <div key={ex.id} className="flex flex-wrap items-center justify-between gap-2 border-b border-border py-2 text-sm last:border-0">
-              <div className="flex items-center gap-2">
-                <span>{ex.name}</span>
-                {ex.isCustom ? <Badge variant="secondary">custom</Badge> : null}
-              </div>
-              <div className="flex flex-wrap items-center gap-1.5">
-                <Badge variant="outline">{CATEGORY_LABEL[ex.category] ?? ex.category}</Badge>
-                {ex.muscleGroups.map((mg) => (
-                  <Badge key={mg.id}>{mg.muscleGroup}</Badge>
-                ))}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+      <ExerciseLibraryList exercises={exercises} />
     </div>
   );
 }

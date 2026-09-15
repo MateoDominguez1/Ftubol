@@ -8,11 +8,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ExercisePicker } from "@/components/ui/exercise-picker";
 import { Trash2, Plus } from "lucide-react";
 
 export interface ExerciseOption {
   id: string;
   name: string;
+  category?: string;
 }
 
 interface SetRow {
@@ -22,6 +24,8 @@ interface SetRow {
   difficulty: string;
   restSeconds: string;
   tempo: string;
+  durationMin: string;
+  distanceKm: string;
   notes: string;
   painFlag: boolean;
 }
@@ -45,7 +49,10 @@ const WORKOUT_TYPES = [
 ];
 
 function emptySet(): SetRow {
-  return { weightKg: "", reps: "", rir: "", difficulty: "", restSeconds: "", tempo: "", notes: "", painFlag: false };
+  return {
+    weightKg: "", reps: "", rir: "", difficulty: "", restSeconds: "", tempo: "",
+    durationMin: "", distanceKm: "", notes: "", painFlag: false,
+  };
 }
 
 function newBlock(exerciseId: string): ExerciseBlock {
@@ -88,17 +95,13 @@ export function GymSessionBuilder({
   const [sessionRPE, setSessionRPE] = useState("");
   const [notes, setNotes] = useState("");
   const [blocks, setBlocks] = useState<ExerciseBlock[]>(() => (initialExercises ?? []).map(blockFromRoutineExercise));
-  const [pickerValue, setPickerValue] = useState("");
 
-  const exerciseName = useMemo(() => {
-    const map = new Map(exercises.map((e) => [e.id, e.name]));
-    return (id: string) => map.get(id) ?? "Ejercicio";
-  }, [exercises]);
+  const exerciseById = useMemo(() => new Map(exercises.map((e) => [e.id, e])), [exercises]);
+  const isCardio = (exerciseId: string) => exerciseById.get(exerciseId)?.category === "CARDIO";
 
   function addExercise(exerciseId: string) {
     if (!exerciseId) return;
     setBlocks((prev) => [...prev, newBlock(exerciseId)]);
-    setPickerValue("");
   }
 
   function removeBlock(key: string) {
@@ -142,6 +145,8 @@ export function GymSessionBuilder({
           difficulty: s.difficulty ? Number(s.difficulty) : null,
           restSeconds: s.restSeconds ? Number(s.restSeconds) : null,
           tempo: s.tempo || null,
+          durationMin: s.durationMin ? Number(s.durationMin) : null,
+          distanceKm: s.distanceKm ? Number(s.distanceKm) : null,
           notes: s.notes || null,
           painFlag: s.painFlag,
         })),
@@ -189,94 +194,114 @@ export function GymSessionBuilder({
         </CardContent>
       </Card>
 
-      <div className="flex flex-col gap-3">
-        {blocks.map((block) => (
-          <Card key={block.key}>
-            <CardContent className="flex flex-col gap-3 pt-4">
-              <div className="flex items-center justify-between">
-                <p className="font-medium">{exerciseName(block.exerciseId)}</p>
-                <button type="button" onClick={() => removeBlock(block.key)} className="text-muted-2 hover:text-danger">
-                  <Trash2 className="h-4 w-4" />
-                </button>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                {block.sets.map((set, idx) => (
-                  <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-1.5">
-                    <Input
-                      type="number"
-                      step="0.5"
-                      placeholder="kg"
-                      value={set.weightKg}
-                      onChange={(e) => updateSet(block.key, idx, { weightKg: e.target.value })}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="reps"
-                      value={set.reps}
-                      onChange={(e) => updateSet(block.key, idx, { reps: e.target.value })}
-                    />
-                    <Input
-                      type="number"
-                      placeholder="RIR"
-                      value={set.rir}
-                      onChange={(e) => updateSet(block.key, idx, { rir: e.target.value })}
-                    />
-                    <Input
-                      type="number"
-                      min={1}
-                      max={5}
-                      placeholder="Dif. 1-5"
-                      value={set.difficulty}
-                      onChange={(e) => updateSet(block.key, idx, { difficulty: e.target.value })}
-                    />
-                    <button type="button" onClick={() => removeSet(block.key, idx)} className="text-muted-2 hover:text-danger">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <Button type="button" variant="outline" size="sm" onClick={() => addSet(block.key)}>
-                <Plus className="h-3.5 w-3.5" /> Agregar serie
-              </Button>
-
-              <Textarea
-                placeholder="Notas del ejercicio (opcional)"
-                value={block.notes}
-                onChange={(e) => updateBlock(block.key, { notes: e.target.value })}
-              />
-
-              <label className="flex items-center gap-2 text-xs text-muted">
-                <input
-                  type="checkbox"
-                  checked={block.painFlag}
-                  onChange={(e) => updateBlock(block.key, { painFlag: e.target.checked })}
-                  className="h-4 w-4 rounded border-border"
-                />
-                Sentí molestia en este ejercicio
-              </label>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
       <Card>
         <CardContent className="flex items-center gap-2 pt-4">
-          <Select value={pickerValue} onValueChange={addExercise}>
-            <SelectTrigger>
-              <SelectValue placeholder="Agregar ejercicio..." />
-            </SelectTrigger>
-            <SelectContent>
-              {exercises.map((ex) => (
-                <SelectItem key={ex.id} value={ex.id}>
-                  {ex.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <ExercisePicker exercises={exercises} onPick={(ex) => addExercise(ex.id)} className="w-full" />
         </CardContent>
       </Card>
+
+      <div className="flex flex-col gap-3">
+        {blocks.map((block) => {
+          const cardio = isCardio(block.exerciseId);
+          return (
+            <Card key={block.key}>
+              <CardContent className="flex flex-col gap-3 pt-4">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium">{exerciseById.get(block.exerciseId)?.name ?? "Ejercicio"}</p>
+                  <button type="button" onClick={() => removeBlock(block.key)} className="text-muted-2 hover:text-danger">
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  {block.sets.map((set, idx) =>
+                    cardio ? (
+                      <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_auto] items-center gap-1.5">
+                        <Input
+                          type="number"
+                          step="1"
+                          placeholder="minutos"
+                          value={set.durationMin}
+                          onChange={(e) => updateSet(block.key, idx, { durationMin: e.target.value })}
+                        />
+                        <Input
+                          type="number"
+                          step="0.1"
+                          placeholder="km (opcional)"
+                          value={set.distanceKm}
+                          onChange={(e) => updateSet(block.key, idx, { distanceKm: e.target.value })}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="RPE"
+                          value={set.rir}
+                          onChange={(e) => updateSet(block.key, idx, { rir: e.target.value })}
+                        />
+                        <button type="button" onClick={() => removeSet(block.key, idx)} className="text-muted-2 hover:text-danger">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div key={idx} className="grid grid-cols-[1fr_1fr_1fr_1fr_auto] items-center gap-1.5">
+                        <Input
+                          type="number"
+                          step="0.5"
+                          placeholder="kg"
+                          value={set.weightKg}
+                          onChange={(e) => updateSet(block.key, idx, { weightKg: e.target.value })}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="reps"
+                          value={set.reps}
+                          onChange={(e) => updateSet(block.key, idx, { reps: e.target.value })}
+                        />
+                        <Input
+                          type="number"
+                          placeholder="RIR"
+                          value={set.rir}
+                          onChange={(e) => updateSet(block.key, idx, { rir: e.target.value })}
+                        />
+                        <Input
+                          type="number"
+                          min={1}
+                          max={5}
+                          placeholder="Dif. 1-5"
+                          value={set.difficulty}
+                          onChange={(e) => updateSet(block.key, idx, { difficulty: e.target.value })}
+                        />
+                        <button type="button" onClick={() => removeSet(block.key, idx)} className="text-muted-2 hover:text-danger">
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ),
+                  )}
+                </div>
+
+                <Button type="button" variant="outline" size="sm" onClick={() => addSet(block.key)}>
+                  <Plus className="h-3.5 w-3.5" /> {cardio ? "Agregar bloque" : "Agregar serie"}
+                </Button>
+
+                <Textarea
+                  placeholder="Notas del ejercicio (opcional)"
+                  value={block.notes}
+                  onChange={(e) => updateBlock(block.key, { notes: e.target.value })}
+                />
+
+                <label className="flex items-center gap-2 text-xs text-muted">
+                  <input
+                    type="checkbox"
+                    checked={block.painFlag}
+                    onChange={(e) => updateBlock(block.key, { painFlag: e.target.checked })}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  Sentí molestia en este ejercicio
+                </label>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="notes">Notas de la sesión (opcional)</Label>

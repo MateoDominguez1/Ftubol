@@ -43,6 +43,7 @@ export default async function GymSessionDetailPage({ params }: { params: Promise
       </div>
 
       {workout.exercises.map((we) => {
+        const cardio = we.exercise.category === "CARDIO";
         const totalVolume = we.sets.reduce((acc, s) => acc + setVolume(s.weightKg, s.reps), 0);
         const best = we.sets.reduce<{ est: number; weight: number; reps: number } | null>((acc, s) => {
           if (s.weightKg == null || s.reps == null) return acc;
@@ -50,6 +51,8 @@ export default async function GymSessionDetailPage({ params }: { params: Promise
           if (!acc || est > acc.est) return { est, weight: s.weightKg, reps: s.reps };
           return acc;
         }, null);
+        const totalCardioMin = we.sets.reduce((acc, s) => acc + (s.durationMin ?? 0), 0);
+        const totalCardioKm = we.sets.reduce((acc, s) => acc + (s.distanceKm ?? 0), 0);
 
         return (
           <Card key={we.id}>
@@ -61,22 +64,39 @@ export default async function GymSessionDetailPage({ params }: { params: Promise
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <div className="flex flex-col gap-1">
-                {we.sets.map((s) => (
-                  <div key={s.id} className="flex items-center gap-3 text-sm text-muted">
-                    <span className="w-6 text-muted-2">#{s.setNumber}</span>
-                    <span className="font-medium text-foreground">
-                      {s.weightKg ?? "-"}kg × {s.reps ?? "-"}
-                    </span>
-                    {s.rir != null ? <span>RIR {s.rir}</span> : null}
-                    {s.difficulty != null ? <span>Dif. {s.difficulty}/5</span> : null}
-                    {s.painFlag ? <Badge variant="danger">dolor</Badge> : null}
-                  </div>
-                ))}
+                {we.sets.map((s) =>
+                  cardio ? (
+                    <div key={s.id} className="flex items-center gap-3 text-sm text-muted">
+                      <span className="w-6 text-muted-2">#{s.setNumber}</span>
+                      <span className="font-medium text-foreground">{s.durationMin ?? "-"} min</span>
+                      {s.distanceKm != null ? <span>{s.distanceKm} km</span> : null}
+                      {s.rir != null ? <span>RPE {s.rir}</span> : null}
+                      {s.painFlag ? <Badge variant="danger">dolor</Badge> : null}
+                    </div>
+                  ) : (
+                    <div key={s.id} className="flex items-center gap-3 text-sm text-muted">
+                      <span className="w-6 text-muted-2">#{s.setNumber}</span>
+                      <span className="font-medium text-foreground">
+                        {s.weightKg ?? "-"}kg × {s.reps ?? "-"}
+                      </span>
+                      {s.rir != null ? <span>RIR {s.rir}</span> : null}
+                      {s.difficulty != null ? <span>Dif. {s.difficulty}/5</span> : null}
+                      {s.painFlag ? <Badge variant="danger">dolor</Badge> : null}
+                    </div>
+                  ),
+                )}
               </div>
-              <div className="flex gap-4 text-xs text-muted-2">
-                <span>Volumen: {Math.round(totalVolume)} kg</span>
-                {best ? <span>Mejor 1RM est.: {Math.round(best.est)} kg</span> : null}
-              </div>
+              {cardio ? (
+                <div className="flex gap-4 text-xs text-muted-2">
+                  <span>Total: {totalCardioMin} min</span>
+                  {totalCardioKm > 0 ? <span>{totalCardioKm.toFixed(1)} km</span> : null}
+                </div>
+              ) : (
+                <div className="flex gap-4 text-xs text-muted-2">
+                  <span>Volumen: {Math.round(totalVolume)} kg</span>
+                  {best ? <span>Mejor 1RM est.: {Math.round(best.est)} kg</span> : null}
+                </div>
+              )}
               {we.notes ? <p className="text-sm text-muted">{we.notes}</p> : null}
 
               {we.progressionDecision ? (

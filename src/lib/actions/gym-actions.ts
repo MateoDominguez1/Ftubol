@@ -13,6 +13,8 @@ const SetSchema = z.object({
   difficulty: z.number().int().min(1).max(5).nullable().optional(),
   restSeconds: z.number().int().nullable().optional(),
   tempo: z.string().nullable().optional(),
+  durationMin: z.number().nullable().optional(),
+  distanceKm: z.number().nullable().optional(),
   notes: z.string().nullable().optional(),
   painFlag: z.boolean().optional(),
 });
@@ -69,6 +71,8 @@ export async function createWorkoutAction(formData: FormData) {
               difficulty: s.difficulty ?? null,
               restSeconds: s.restSeconds ?? null,
               tempo: s.tempo || null,
+              durationMin: s.durationMin ?? null,
+              distanceKm: s.distanceKm ?? null,
               notes: s.notes || null,
               painFlag: s.painFlag ?? false,
             })),

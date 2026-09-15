@@ -12,7 +12,7 @@ export default async function NewGymSessionPage({
   const { routine: routineId } = await searchParams;
   const today = todayStart();
   const [exercises, checkin, routine] = await Promise.all([
-    prisma.exercise.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true } }),
+    prisma.exercise.findMany({ orderBy: { name: "asc" }, select: { id: true, name: true, category: true } }),
     prisma.dailyCheckin.findUnique({ where: { date: today } }),
     routineId
       ? prisma.routine.findUnique({

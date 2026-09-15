@@ -6,7 +6,7 @@ const prisma = new PrismaClient({ adapter });
 
 type SeedExercise = {
   name: string;
-  category: "STRENGTH" | "POWER" | "CORE" | "INJURY_PREVENTION" | "ACCESSORY";
+  category: "STRENGTH" | "POWER" | "CORE" | "INJURY_PREVENTION" | "ACCESSORY" | "CARDIO";
   muscleGroups: { group: string; factor: number }[];
   injuryZones?: string[];
 };
@@ -41,6 +41,12 @@ const EXERCISES: SeedExercise[] = [
   { name: "Pallof press", category: "CORE", muscleGroups: [{ group: "CORE", factor: 1 }] },
   { name: "Elevación de piernas", category: "CORE", muscleGroups: [{ group: "CORE", factor: 1 }] },
   { name: "Cable crunch", category: "CORE", muscleGroups: [{ group: "CORE", factor: 1 }] },
+  // Cardio
+  { name: "Caminadora / cinta", category: "CARDIO", muscleGroups: [{ group: "QUADS", factor: 0.3 }, { group: "CALVES", factor: 0.3 }] },
+  { name: "Bicicleta fija", category: "CARDIO", muscleGroups: [{ group: "QUADS", factor: 0.3 }] },
+  { name: "Elíptica", category: "CARDIO", muscleGroups: [{ group: "QUADS", factor: 0.2 }, { group: "GLUTES", factor: 0.2 }] },
+  { name: "Remo (máquina de cardio)", category: "CARDIO", muscleGroups: [{ group: "BACK", factor: 0.2 }] },
+  { name: "Escalador / StairMaster", category: "CARDIO", muscleGroups: [{ group: "GLUTES", factor: 0.3 }, { group: "QUADS", factor: 0.3 }] },
 ];
 
 type SeedFood = {

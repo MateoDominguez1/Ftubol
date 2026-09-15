@@ -55,6 +55,7 @@ enum ExerciseCategory {
   CORE
   INJURY_PREVENTION
   ACCESSORY
+  CARDIO
 }
 
 enum BodyZone {
@@ -267,6 +268,8 @@ model SetEntry {
   difficulty        Int?
   restSeconds       Int?
   tempo             String?
+  durationMin       Float?
+  distanceKm        Float?
   painFlag          Boolean         @default(false)
   notes             String?
 }
